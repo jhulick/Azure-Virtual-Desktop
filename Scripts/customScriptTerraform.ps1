@@ -149,6 +149,46 @@ catch {
     Add-Content C:\DeploymentLogs\log.txt "Error setting defender exclusions. exit code is: $LASTEXITCODE"
 }
 
+# Enable Azure AD Kerberos
+
+Add-Content '*** WVD AIB CUSTOMIZER PHASE *** Enable Azure AD Kerberos ***'
+$registryPath = "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\Kerberos\Parameters"
+$registryKey= "CloudKerberosTicketRetrievalEnabled"
+$registryValue = "1"
+
+IF(!(Test-Path $registryPath)) {
+    New-Item -Path $registryPath -Force | Out-Null
+}
+
+try {
+    New-ItemProperty -Path $registryPath -Name $registryKey -Value $registryValue -PropertyType DWORD -Force | Out-Null
+}
+catch {
+    Add-Content "*** AVD AIB CUSTOMIZER PHASE ***  Enable Azure AD Kerberos - Cannot add the registry key $registryKey *** : [$($_.Exception.Message)]"
+    Add-Content "Message: [$($_.Exception.Message)"]
+}
+
+
+# Create new reg key "LoadCredKey"
+
+Add-Content '*** AVD AIB CUSTOMIZER PHASE *** Create new reg key LoadCredKey ***'
+
+$LoadCredRegPath = "HKLM:\Software\Policies\Microsoft\AzureADAccount"
+$LoadCredName = "LoadCredKeyFromProfile"
+$LoadCredValue = "1"
+
+IF(!(Test-Path $LoadCredRegPath)) {
+    New-Item -Path $LoadCredRegPath -Force | Out-Null
+}
+
+try {
+    New-ItemProperty -Path $LoadCredRegPath -Name $LoadCredName -Value $LoadCredValue -PropertyType DWORD -Force | Out-Null
+}
+catch {
+    Add-Content "*** AVD AIB CUSTOMIZER PHASE ***  LoadCredKey - Cannot add the registry key $LoadCredName *** : [$($_.Exception.Message)]"
+    Add-Content "Message: [$($_.Exception.Message)"]
+}
+
 if ($installTeams) {
 
     Add-Content C:\DeploymentLogs\log.txt "Installing Teams. exit code is: $LASTEXITCODE"
